@@ -1,16 +1,22 @@
+import os
+import glob
 import logging
 import logging.config
 
 import yaml
 import markdown
 from docopt import docopt
-from webhelpers import html, date
+from webhelpers import html, text, date
 
 import kajiki
 
 log = None
 
 loader = kajiki.FileLoader('templates', autoescape_text=True)
+helpers = dict(
+    html=html,
+    text=text,
+    date=date)
 
 def remake_blog():
     global log
@@ -26,9 +32,18 @@ def remake_blog():
     logging.config.dictConfig(config['logging'])
     log = logging.getLogger(__name__)
     log.info('Logging configured')
-    helpers = dict(
-        html=html,
-        date=date)
+    posts = []
+    for fn_content in glob.glob('posts/*.md'):
+        slug = os.path.basename(fn_content).rsplit('.', 1)[0]
+        entry = render_page(
+            config,
+            fn_out='public/posts/{}.html'.format(slug),
+            fn_template='post.html',
+            fn_content=fn_content,
+            blog=config['blog'],
+            h=helpers)
+        posts.append(Object.ify(entry))
+    posts.sort(key=lambda p: p.meta.date, reverse=True)
     for slug, pg in config['pages'].items():
         render_page(
             config,
@@ -37,19 +52,29 @@ def remake_blog():
             fn_content=pg.get('content', None),
             page=pg,
             blog=config['blog'],
-            h=helpers)
+            h=helpers,
+            posts=posts)
 
 def render_page(config, fn_out, fn_template, fn_content, **kwargs):
+    path = '/' + '/'.join(fn_out.split('/')[1:])
+    md = markdown.Markdown(extensions=['meta'])
+    md_pre = markdown.Markdown(extensions=['meta'])
     Template = loader.import_(fn_template)
     if fn_content is not None:
         with open(fn_content) as fp:
-            content = markdown.markdown(fp.read())
+            md_content = fp.read()
+        content = md.convert(md_content)
+        preview = md_pre.convert(text.truncate(md_content, 300, whole_word=True))
     else:
-        content = ''
+        content = preview = ''
     with open(fn_out, 'w') as fp:
-        context = dict(content=content, **kwargs)
+        context = dict(
+            path=path, content=content, preview=preview, **kwargs)
+        if hasattr(md, 'Meta'):
+            context['meta'] = md.Meta
         for chunk in Template(Object.ify(context)):
             fp.write(chunk)
+    return context
 
 class Object(dict):
 
