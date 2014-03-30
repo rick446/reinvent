@@ -42,7 +42,8 @@ def remake_blog():
             fn_content=fn_content,
             blog=config['blog'],
             h=helpers)
-        posts.append(Object.ify(entry))
+        if eval(entry.meta.published[0]):
+            posts.append(Object.ify(entry))
     posts.sort(key=lambda p: p.meta.date, reverse=True)
     for slug, pg in config['pages'].items():
         render_page(
@@ -72,7 +73,8 @@ def render_page(config, fn_out, fn_template, fn_content, **kwargs):
             path=path, content=content, preview=preview, **kwargs)
         if hasattr(md, 'Meta'):
             context['meta'] = md.Meta
-        for chunk in Template(Object.ify(context)):
+        context = Object.ify(context)
+        for chunk in Template(context):
             fp.write(chunk)
     return context
 
