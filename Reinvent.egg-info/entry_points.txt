@@ -1,0 +1,4 @@
+      [console_scripts]
+      remake-blog = reinvent.script:remake_blog
+      recreate-blog = reinvent.script:recreate_blog
+      
