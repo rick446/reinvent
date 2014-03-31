@@ -41,7 +41,7 @@ def remake_blog():
     for fn_post in glob.glob('posts/*.md'):
         slug = os.path.basename(fn_post).rsplit('.', 1)[0]
         md = markdown.Markdown(extensions=['meta'])
-        md_pre = markdown.Markdown()
+        md_pre = markdown.Markdown(extensions=['meta'])
         with open(fn_post) as fp:
             md_content = fp.read()
             html_content = md.convert(md_content)
