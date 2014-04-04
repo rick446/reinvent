@@ -15,6 +15,8 @@ import kajiki
 
 log = None
 
+extensions = ['meta', 'extra']
+
 loader = kajiki.FileLoader('templates', autoescape_text=True)
 helpers = dict(
     html=html,
@@ -40,8 +42,8 @@ def remake_blog():
     posts = []
     for fn_post in glob.glob('posts/*.md'):
         slug = os.path.basename(fn_post).rsplit('.', 1)[0]
-        md = markdown.Markdown(extensions=['meta'])
-        md_pre = markdown.Markdown(extensions=['meta'])
+        md = markdown.Markdown(extensions=extensions)
+        md_pre = markdown.Markdown(extensions=extensions)
         with open(fn_post) as fp:
             md_content = fp.read()
             html_content = md.convert(md_content)
@@ -128,7 +130,7 @@ def make_archive(posts):
 
     archive = []
     for month, month_posts in sorted(posts_by_month.items(), reverse=True):
-        path='/archive-{:%Y-%m}.html'.format(month)
+        path='archive-{:%Y-%m}.html'.format(month)
         fn_out = 'public/' + path
         s_month = '{:%B %Y}'.format(month)
         archive_data = Object.ify(dict(
